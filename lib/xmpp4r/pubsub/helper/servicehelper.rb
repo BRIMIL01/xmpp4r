@@ -185,6 +185,30 @@ module Jabber
       end
 
       ##
+      # gets an item from a pubsub node
+      # node:: [String]
+      # message_id:: [String]
+      # return:: [Hash] { id => [Jabber::PubSub::Item] }
+      def get_item_from(node, message_id)
+        iq = basic_pubsub_query(:get)
+        items = Jabber::PubSub::Items.new
+        items.node = node
+        item = Jabber::PubSub::Item.new
+        item.id = message_id
+        items.add(item)
+        iq.pubsub.add(items)
+        res = nil
+        @stream.send_with_id(iq) { |reply|
+          if reply.kind_of?(Iq) and reply.pubsub and reply.pubsub.first_element('items')
+            item = reply.pubsub.first_element('items').first_element('item')
+            return item.children.first if item.children.first
+          end
+          true
+        }
+        res
+      end
+
+      ##
       # NOTE: this method sends only one item per publish request because some services
       # may not allow batch processing.  Maybe this will changed in the future?
       # node:: [String]
