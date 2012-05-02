@@ -200,8 +200,8 @@ module Jabber
         res = nil
         @stream.send_with_id(iq) { |reply|
           if reply.kind_of?(Iq) and reply.pubsub and reply.pubsub.first_element('items')
-            item = reply.pubsub.first_element('items').first_element('item')
-            return item.children.first if item.children.first
+            item = reply.pubsub.first_element('items').first_element("item")
+            res = item.children.first if item.children.first
           end
           true
         }
@@ -402,8 +402,8 @@ module Jabber
       # shows all subscriptions on the given node
       # node:: [String]
       # return:: [Array] of [Jabber::Pubsub::Subscription]
-      def get_subscriptions_from(node)
-        iq = basic_pubsub_query(:get)
+      def get_subscriptions_from(node, owner=false)
+        iq = basic_pubsub_query(:get, owner)
         entities = iq.pubsub.add(REXML::Element.new('subscriptions'))
         entities.attributes['node'] = node
         res = nil

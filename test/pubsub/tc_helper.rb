@@ -453,6 +453,40 @@ class PubSub::ServiceHelperTest < Test::Unit::TestCase
     wait_state
   end
 
+    ##
+  # retrieve one item by id
+  # examples 70 and 71 from
+  # http://www.xmpp.org/extensions/xep-0060.html#subscriber-retrieve-returnall
+  def test_item
+    item1 = Jabber::PubSub::Item.new("1234567")
+    item1.text = 'foobar'
+
+    h = PubSub::ServiceHelper.new(@client,'pubsub.example.org')
+
+    state { |iq|
+      assert_kind_of(Jabber::Iq, iq)
+      assert_equal(:get, iq.type)
+      assert_equal(1, iq.pubsub.children.size)
+      assert_equal('items', iq.pubsub.children.first.name)
+      assert_equal('mynode', iq.pubsub.children.first.attributes['node'])
+      assert_equal('item', iq.pubsub.children.first.children.first.name)
+      assert_equal('1234567', iq.pubsub.children.first.children.first.attributes['id'])
+      send("<iq type='result' to='#{iq.from}' from='#{iq.to}' id='#{iq.id}'>
+              <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+                <items node='mynode'>
+                  #{item1.to_s}
+                </items>
+              </pubsub>
+            </iq>")
+    }
+
+    items = h.get_item_from('mynode', "1234567")
+    assert_equal(1, items.size)
+    assert_kind_of(REXML::Text, items['1'])
+    assert_equal(item1.children.join, items['1'].to_s)
+    wait_state
+  end
+
   ##
   # retrieve some items
   # example 76 from
