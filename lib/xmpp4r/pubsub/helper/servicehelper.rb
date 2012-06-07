@@ -221,7 +221,12 @@ module Jabber
 
         if item.kind_of?(Jabber::PubSub::Item)
           publish.add(item)
-          @stream.send_with_id(iq)
+          @stream.send_with_id(iq) { |reply|
+            if reply.kind_of?(Iq) and reply.pubsub and reply.pubsub.first_element('publish')
+              item = reply.pubsub.first_element('publish').first_element("item")
+              return item.id
+            end
+          }
         end
       end
 
