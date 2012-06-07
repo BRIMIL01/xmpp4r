@@ -218,16 +218,17 @@ module Jabber
         iq = basic_pubsub_query(:set)
         publish = iq.pubsub.add(REXML::Element.new('publish'))
         publish.attributes['node'] = node
-
+        res = nil
         if item.kind_of?(Jabber::PubSub::Item)
           publish.add(item)
           @stream.send_with_id(iq) { |reply|
             if reply.kind_of?(Iq) and reply.pubsub and reply.pubsub.first_element('publish')
               item = reply.pubsub.first_element('publish').first_element("item")
-              return item.id
+              res = item.id
             end
           }
         end
+        res
       end
 
       ##
